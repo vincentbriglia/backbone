@@ -24,7 +24,7 @@ $(function(){
     // Ensure that each todo created has `title`.
     initialize: function() {
       if (!this.get("title")) {
-        this.set({"title": this.defaults.title});
+        this.set({"title": this.defaults().title});
       }
     },
 
@@ -51,7 +51,7 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items under the `"todos"` namespace.
-    localStorage: new Store("todos-backbone"),
+    localStorage: new Backbone.LocalStorage("todos-backbone"),
 
     // Filter down the list of all todo items that are finished.
     done: function() {
@@ -105,8 +105,8 @@ $(function(){
     // a one-to-one correspondence between a **Todo** and a **TodoView** in this
     // app, we set a direct reference on the model for convenience.
     initialize: function() {
-      this.model.bind('change', this.render, this);
-      this.model.bind('destroy', this.remove, this);
+      this.model.on('change', this.render, this);
+      this.model.on('destroy', this.remove, this);
     },
 
     // Re-render the titles of the todo item.
@@ -176,9 +176,9 @@ $(function(){
       this.input = this.$("#new-todo");
       this.allCheckbox = this.$("#toggle-all")[0];
 
-      Todos.bind('add', this.addOne, this);
-      Todos.bind('reset', this.addAll, this);
-      Todos.bind('all', this.render, this);
+      Todos.on('add', this.addOne, this);
+      Todos.on('reset', this.addAll, this);
+      Todos.on('all', this.render, this);
 
       this.footer = this.$('footer');
       this.main = $('#main');
