@@ -773,7 +773,7 @@
     // adding missing models, update existing and and optionally remove missing models.
     // If `prune: true` is passed, the collection is pruned of the models not present in
     // the method's models argument.
-    update : function(models, options) {
+    update: function(models, options) {
       var i, index, length, dummyModel, model, index, stack = [];
       options = options ? _.clone(options) : {};
       models = _.isArray(models) ? models.slice() : [models];
