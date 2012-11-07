@@ -97,7 +97,7 @@ $(document).ready(function() {
     equal(col.pluck('label').join(' '), 'a b c d');
   });
 
-  test("add", 11, function() {
+  test("add", 10, function() {
     var added, opts, secondAdded;
     added = opts = secondAdded = null;
     e = new Backbone.Model({id: 10, label : 'e'});
@@ -107,7 +107,6 @@ $(document).ready(function() {
     });
     col.on('add', function(model, collection, options){
       added = model.get('label');
-      equal(options.index, 4);
       opts = options;
     });
     col.add(e, {amazing: true});
@@ -584,23 +583,6 @@ $(document).ready(function() {
     });
   });
 
-  test("index with comparator", 4, function() {
-    var counter = 0;
-    var col = new Backbone.Collection([{id: 2}, {id: 4}], {
-      comparator: function(model){ return model.id; }
-    }).on('add', function(model, colleciton, options){
-      if (model.id == 1) {
-        equal(options.index, 0);
-        equal(counter++, 0);
-      }
-      if (model.id == 3) {
-        equal(options.index, 2);
-        equal(counter++, 1);
-      }
-    });
-    col.add([{id: 3}, {id: 1}]);
-  });
-
   test("throwing during add leaves consistent state", 4, function() {
     var col = new Backbone.Collection();
     col.on('test', function() { ok(false); });
@@ -686,7 +668,7 @@ $(document).ready(function() {
     collection.create({id: 1});
   });
 
-  test("#1447 - create with wait adds model.", function() {
+  test("#1447 - create with wait adds model.", 1, function() {
     var collection = new Backbone.Collection;
     var model = new Backbone.Model;
     model.sync = function(method, model, options){ options.success(); };
@@ -694,7 +676,7 @@ $(document).ready(function() {
     collection.create(model, {wait: true});
   });
 
-  test("#1448 - add sorts collection after merge.", function() {
+  test("#1448 - add sorts collection after merge.", 1, function() {
     var collection = new Backbone.Collection([
       {id: 1, x: 1},
       {id: 2, x: 2}
@@ -703,4 +685,56 @@ $(document).ready(function() {
     collection.add({id: 1, x: 3}, {merge: true});
     deepEqual(collection.pluck('id'), [2, 1]);
   });
+
+  test("#1655 - groupBy can be used with a string argument.", 3, function() {
+    var collection = new Backbone.Collection([{x: 1}, {x: 2}]);
+    var grouped = collection.groupBy('x');
+    strictEqual(_.keys(grouped).length, 2);
+    strictEqual(grouped[1][0].get('x'), 1);
+    strictEqual(grouped[2][0].get('x'), 2);
+  });
+
+  test("#1655 - sortBy can be used with a string argument.", 1, function() {
+    var collection = new Backbone.Collection([{x: 3}, {x: 1}, {x: 2}]);
+    var values = _.map(collection.sortBy('x'), function(model) {
+      return model.get('x');
+    });
+    deepEqual(values, [1, 2, 3]);
+  });
+
+  test("#1604 - Removal during iteration.", 0, function() {
+    var collection = new Backbone.Collection([{}, {}]);
+    collection.on('add', function() {
+      collection.at(0).destroy();
+    });
+    collection.add({}, {at: 0});
+  });
+
+  test("#1638 - `sort` during `add` triggers correctly.", function() {
+    var collection = new Backbone.Collection;
+    collection.comparator = function(model) { return model.get('x'); };
+    var added = [];
+    collection.on('add', function(model) {
+      model.set({x: 3});
+      collection.sort();
+      added.push(model.id);
+    });
+    collection.add([{id: 1, x: 1}, {id: 2, x: 2}]);
+    deepEqual(added, [1, 2]);
+  });
+
+  test("fetch parses models by default", 1, function() {
+    var model = {};
+    var Collection = Backbone.Collection.extend({
+      url: 'test',
+      model: Backbone.Model.extend({
+        parse: function(resp) {
+          strictEqual(resp, model);
+        }
+      })
+    });
+    new Collection().fetch();
+    this.ajaxSettings.success([model]);
+  });
+
 });
